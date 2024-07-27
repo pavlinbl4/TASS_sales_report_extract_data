@@ -7,10 +7,9 @@ import re
 from pathlib import Path
 from tkinter import filedialog
 
-import openpyxl
 import requests
-from bs4 import BeautifulSoup
 from loguru import logger
+from must_have.crome_options import setting_chrome_options
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -18,8 +17,6 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 from tqdm import tqdm
 from webdriver_manager.chrome import ChromeDriverManager
-
-from must_have.crome_options import setting_chrome_options
 from xlsx_tools.write_to_xlsx import write_to_main_file
 
 main_report = '/Users/evgeniy/Library/Mobile Documents/com~apple~CloudDocs/TASS/all_years_report.xlsx'
@@ -57,16 +54,6 @@ def get_preview_mail_report(mail_report: dict, report_date: str, file_extension:
     driver.quit()
 
 
-# create dict from xlsx file, index row number, value - list from columns date
-def report_from_tass_xlsx_file(xlsx_file: str) -> dict:
-    wb = openpyxl.load_workbook(xlsx_file)
-    sheet = wb.active
-    report = {}
-    for number, value in enumerate(sheet.rows, start=1):
-        report[number] = [cell.value if cell.value is not None else '' for cell in sheet[number]]
-    return report
-
-
 def get_info_from_report(mail_report: dict, file_extension: str) -> dict:
     # словарь, где ключ - id снимка, а значение список с цифрами покупок
     photos = {}
@@ -88,20 +75,6 @@ def extract_money_value_from_report_file(file_extension, i, mail_report):
     remove_spaces_and_comma_in_mail_report = mail_report[i][column_number].replace(' ', '').replace(',', '.')
     money = float(remove_spaces_and_comma_in_mail_report)
     return money, photo_id
-
-
-# from html report file extract dict with information about sales,
-# index row number, value - list from columns date
-def report_from_html_report_file(path_to_report_file: str) -> dict:
-    with open(path_to_report_file, 'r') as report_file:
-        table = BeautifulSoup(report_file, 'lxml')
-    table = table.find('tbody')
-    table = table.find_all('tr')[4:]  # start with data row in table
-    row_in_table = [x for x in table]
-    report = {}
-    for i in range(len(table)):
-        report[i] = [x.text.strip() for x in row_in_table[i].find_all('td')]
-    return report
 
 
 def get_report_date(mail_report, file_extension):
@@ -136,21 +109,6 @@ def tass_sales():
 
     write_to_main_file(photos, main_report, report_date)
     get_preview_mail_report(mail_report, report_date, file_extension)
-
-
-# check file extension and extract data from suitable file
-def extract_mail_report(file_extension, path_to_report_file):
-    mail_report = None
-    if file_extension == '.html':
-        # for the html report
-        mail_report = report_from_html_report_file(path_to_report_file)
-    elif file_extension == '.xlsx':
-        # for the xlsx report
-        mail_report = report_from_tass_xlsx_file(path_to_report_file)
-    else:
-        print("wrong report file type")
-    # index row number, value - list from columns date
-    return mail_report
 
 
 if __name__ == '__main__':
