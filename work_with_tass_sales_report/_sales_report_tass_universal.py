@@ -17,6 +17,8 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 from tqdm import tqdm
 from webdriver_manager.chrome import ChromeDriverManager
+
+from work_with_tass_sales_report.extract_report import extract_mail_report
 from xlsx_tools.write_to_xlsx import write_to_main_file
 
 main_report = '/Users/evgeniy/Library/Mobile Documents/com~apple~CloudDocs/TASS/all_years_report.xlsx'
